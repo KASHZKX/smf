@@ -3,6 +3,8 @@ package context
 import (
 	"fmt"
 	"reflect"
+	"sort"
+	"strconv"
 
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/smf/internal/logger"
@@ -67,6 +69,38 @@ func (c *SMContext) AddQosFlow(qfi uint8, qos *models.QosData) {
 
 func (c *SMContext) RemoveQosFlow(qfi uint8) {
 	delete(c.AdditonalQosFlows, qfi)
+}
+
+func sortedPCCRuleIDsByQoSRef(rules map[string]*PCCRule) []string {
+	ids := make([]string, 0, len(rules))
+	for id := range rules {
+		ids = append(ids, id)
+	}
+
+	sort.SliceStable(ids, func(i, j int) bool {
+		left := rules[ids[i]]
+		right := rules[ids[j]]
+		leftQosID := ""
+		rightQosID := ""
+		if left != nil {
+			leftQosID = left.RefQosDataID()
+		}
+		if right != nil {
+			rightQosID = right.RefQosDataID()
+		}
+
+		leftQosRef, leftErr := strconv.Atoi(leftQosID)
+		rightQosRef, rightErr := strconv.Atoi(rightQosID)
+		if leftErr == nil && rightErr == nil && leftQosRef != rightQosRef {
+			return leftQosRef < rightQosRef
+		}
+		if leftQosID != rightQosID {
+			return leftQosID < rightQosID
+		}
+		return ids[i] < ids[j]
+	})
+
+	return ids
 }
 
 func (c *SMContext) ApplyPccRules(decision *models.SmPolicyDecision) error {
@@ -215,7 +249,8 @@ func (c *SMContext) ApplyPccRules(decision *models.SmPolicyDecision) error {
 	// ==========================================================
 
 	// Pass 1: Pdu Session level charging rules (pduLevelUrrs = nil)
-	for id, pcc := range pduRulesToProcess {
+	for _, id := range sortedPCCRuleIDsByQoSRef(pduRulesToProcess) {
+		pcc := pduRulesToProcess[id]
 		if err := processRule(id, pcc, nil); err != nil {
 			return err
 		}
@@ -235,7 +270,8 @@ func (c *SMContext) ApplyPccRules(decision *models.SmPolicyDecision) error {
 	}
 
 	// Pass 2: Flow level charging rules, which need to apply PDU-level charging data to the data path
-	for id, pcc := range flowRulesToProcess {
+	for _, id := range sortedPCCRuleIDsByQoSRef(flowRulesToProcess) {
+		pcc := flowRulesToProcess[id]
 		if err := processRule(id, pcc, pduChgDatas); err != nil {
 			return err
 		}
