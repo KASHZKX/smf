@@ -654,7 +654,7 @@ func (dataPath *DataPath) ActivateTunnelAndPDR(smContext *SMContext, precedence 
 		if curULTunnel != nil {
 			ULPDR := curULTunnel.PDR
 			ULDestUPF := curULTunnel.DestEndPoint.UPF
-			if defaultQER != nil {
+			if dataPath.IsDefaultPath && defaultQER != nil {
 				ULPDR.QER = append(ULPDR.QER, defaultQER)
 			}
 			if ambrQER != nil && !dataPath.GBRFlow {
@@ -744,7 +744,7 @@ func (dataPath *DataPath) ActivateTunnelAndPDR(smContext *SMContext, precedence 
 			var iface *UPFInterfaceInfo
 			DLPDR := curDLTunnel.PDR
 			DLDestUPF := curDLTunnel.DestEndPoint.UPF
-			if defaultQER != nil {
+			if dataPath.IsDefaultPath && defaultQER != nil {
 				DLPDR.QER = append(DLPDR.QER, defaultQER)
 			}
 			if ambrQER != nil && !dataPath.GBRFlow {
@@ -951,7 +951,7 @@ func (dataPath *DataPath) ActivateDcTunnelAndPDR(smContext *SMContext, precedenc
 		if curULTunnel != nil {
 			ULPDR := curULTunnel.PDR
 			ULDestUPF := curULTunnel.DestEndPoint.UPF
-			if defaultQER != nil {
+			if dataPath.IsDefaultPath && defaultQER != nil {
 				ULPDR.QER = append(ULPDR.QER, defaultQER)
 			}
 			if ambrQER != nil && !dataPath.GBRFlow {
@@ -1041,7 +1041,7 @@ func (dataPath *DataPath) ActivateDcTunnelAndPDR(smContext *SMContext, precedenc
 			var iface *UPFInterfaceInfo
 			DLPDR := curDLTunnel.PDR
 			DLDestUPF := curDLTunnel.DestEndPoint.UPF
-			if defaultQER != nil {
+			if dataPath.IsDefaultPath && defaultQER != nil {
 				DLPDR.QER = append(DLPDR.QER, defaultQER)
 			}
 			if ambrQER != nil && !dataPath.GBRFlow {
